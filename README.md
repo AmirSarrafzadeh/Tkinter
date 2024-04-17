@@ -17,7 +17,7 @@ To run any of these projects on your local machine, make sure you have Python in
 1. Clone this repository to your local machine using Git:
 
     ```
-    git clone https://github.com/your-username/Tkinter.git
+    git clone https://github.com/AmirSarrafzadeh/Tkinter.git
     ```
 
 2. Navigate to the project directory:
