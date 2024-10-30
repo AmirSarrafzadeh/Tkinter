@@ -46,7 +46,7 @@ class MyApp(ctk.CTk):
         self.sidebar_frame = ctk.CTkFrame(self, width=50, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=17, sticky="nsew")
         self.sidebar_frame.grid_rowconfigure(4, weight=1)
-        self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="Setting Pane  26/10/2024", anchor="center",
+        self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="Setting Pane  30/10/2024", anchor="center",
                                        font=ctk.CTkFont(size=15))
         self.logo_label.grid(row=3, column=0, padx=20, pady=(5, 10))
 
@@ -724,12 +724,12 @@ class MyApp(ctk.CTk):
                         selected_temp_df.at[rows_number + 6, 'Color'] = negative_color
                         selected_temp_df.at[rows_number + 7, 'Color'] = positive_color + negative_color
 
-                        empty_column = pd.DataFrame([''] * rows_number, columns=['Def Percentage'])
+                        empty_column = pd.DataFrame([''] * rows_number, columns=['DEF'])
                         abstract_df = pd.concat([abstract_df, selected_temp_df, empty_column], axis=1)
                     else:
-                        empty_column = pd.DataFrame([''] * len(temp_excel), columns=['Def Percentage'])
+                        empty_column = pd.DataFrame([''] * rows_number, columns=['DEF'])
                         selected_temp_df = temp_excel
-                        for row_index in range(len(temp_excel), rows_number + 7):
+                        for row_index in range(len(temp_excel), rows_number+1):
                             selected_temp_df.loc[row_index] = [""] * len(selected_temp_df.columns)
 
                         selected_temp_df.loc[rows_number + 3] = [""] * len(selected_temp_df.columns)
@@ -755,7 +755,18 @@ class MyApp(ctk.CTk):
 
                         abstract_df = pd.concat([abstract_df, selected_temp_df, empty_column], axis=1)
 
-        abstract_df = abstract_df.iloc[:, :-1]
+        # number_of_limits = len(abstract_df.columns) // 7
+        # for i in range(number_of_limits - 1):
+        #     next_column_index = (7 * (i + 1)) + 4
+        #     before_column_index = (7 * i) + 4
+        #     def_percentage_index = (7 * i) + 6
+        #     abstract_df.iloc[rows_number + 4, def_percentage_index] = 'DEF'
+        #     abstract_df.iloc[rows_number + 5, def_percentage_index] = abstract_df.iloc[rows_number + 2, next_column_index] - \
+        #                                                         abstract_df.iloc[rows_number + 2, before_column_index]
+        #     abstract_df.iloc[rows_number + 6, def_percentage_index] = abstract_df.iloc[rows_number + 3, next_column_index] - \
+        #                                                         abstract_df.iloc[rows_number + 3, before_column_index]
+
+        # abstract_df = abstract_df.iloc[:, :-1]
         # make a dataframe for the pivot table
         pivot_df = pd.DataFrame({
             'date': pivot_date,
@@ -766,7 +777,8 @@ class MyApp(ctk.CTk):
         })
         pivot_df['date_time'] = pivot_df['date'] + "_" + pivot_df['time']
         grouped_pivot_df = pivot_df.groupby('date_time').agg(
-            {'total': 'sum', 'time': lambda x: ', '.join(set(x)), 'date_time': 'count', 'date': lambda x: ', '.join(set(x)), 'minimum_area': 'mean',
+            {'total': 'sum', 'time': lambda x: ', '.join(set(x)), 'date_time': 'count',
+             'date': lambda x: ', '.join(set(x)), 'minimum_area': 'mean',
              'color': 'mean'}).rename(columns={'date_time': 'num rep'})
         # sort by total
         grouped_pivot_df = grouped_pivot_df.sort_values(by='total', ascending=False)
@@ -801,13 +813,14 @@ class MyApp(ctk.CTk):
         for col_idx, column_name in enumerate(header_abstract, start=1):
             if 'color' in column_name.lower():  # Check if the column name contains 'color'
                 # Apply red fill for negative values
+                # {'endsWith', 'beginsWith', 'notContains', 'lessThanOrEqual', 'containsText', 'lessThan', 'greaterThanOrEqual', 'notBetween', 'equal', 'greaterThan', 'between', 'notEqual'}
                 ws_abstract.conditional_formatting.add(
                     f"{ws_abstract.cell(2, col_idx).coordinate}:{ws_abstract.cell(colored_last_row, col_idx).coordinate}",
                     CellIsRule(operator='lessThan', formula=['0'], fill=red_fill))
                 # Apply green fill for positive values
                 ws_abstract.conditional_formatting.add(
                     f"{ws_abstract.cell(2, col_idx).coordinate}:{ws_abstract.cell(colored_last_row, col_idx).coordinate}",
-                    CellIsRule(operator='greaterThanOrEqual', formula=['0'], fill=green_fill))
+                    CellIsRule(operator='greaterThan', formula=['0'], fill=green_fill))
             if 'r.e' in column_name.lower():
                 col_values = [ws_abstract.cell(row=row, column=col_idx).value for row in
                               range(2, ws_abstract.max_row + 1)]
@@ -828,10 +841,10 @@ class MyApp(ctk.CTk):
             color_value = ws_pivot.cell(row=row, column=6).value
             time_cell = ws_pivot.cell(row=row, column=2)
             if color_value <= 0:
-                time_cell.fill = PatternFill(start_color="99FF99", end_color="99FF99",
+                time_cell.fill = PatternFill(start_color="FF9999", end_color="FF9999",
                                              fill_type="solid")
             else:
-                time_cell.fill = PatternFill(start_color="FF9999", end_color="FF9999",
+                time_cell.fill = PatternFill(start_color="99FF99", end_color="99FF99",
                                              fill_type="solid")
 
         for row in range(2, ws_pivot.max_row):

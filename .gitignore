@@ -8,3 +8,5 @@
 *.xls
 *.docx
 *.doc
+
+.env

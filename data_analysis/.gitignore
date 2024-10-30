@@ -1,0 +1,93 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-error.log*
+yarn-debug.log*
+
+# Logs
+logs/
+*.log
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+venv.bak/
+.idea/
+.dist/
+.build/
+*.spec
+*.xlsx
+*.xls
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+*.db-journal
+*.db-shm
+*.db-wal
+*.crt
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+target/
+*.log
+*.jks
+
+# JetBrains IDEs (IntelliJ, PyCharm, etc.)
+.idea/
+*.iml
+*.iws
+out/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Visual Studio Code
+.vscode/
+
+# Temporary files
+*.swp
+*.swo
+*.bak
+
+# Compiled source files
+*.dll
+*.exe
+*.out
+
+# Dependency directories
+node_modules/
+bower_components/
+vendor/
+
+# Build directories
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Git
+.git/
