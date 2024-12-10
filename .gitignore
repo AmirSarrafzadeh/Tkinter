@@ -8,5 +8,6 @@
 *.xls
 *.docx
 *.doc
+.tkvenv
 
 .env

@@ -15,10 +15,6 @@ warnings.filterwarnings("ignore")
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 import matplotlib.pyplot as plt
-import seaborn as sns
-from matplotlib.table import Table
-import shutil
-import logging
 
 plt.rcParams['figure.max_open_warning'] = 500
 ctk.set_appearance_mode("System")
@@ -46,7 +42,7 @@ class MyApp(ctk.CTk):
         self.sidebar_frame = ctk.CTkFrame(self, width=50, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=17, sticky="nsew")
         self.sidebar_frame.grid_rowconfigure(4, weight=1)
-        self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="Setting Pane  30/10/2024", anchor="center",
+        self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="Setting Pane  01/11/2024", anchor="center",
                                        font=ctk.CTkFont(size=15))
         self.logo_label.grid(row=3, column=0, padx=20, pady=(5, 10))
 
@@ -409,7 +405,7 @@ class MyApp(ctk.CTk):
             # copy_df.to_excel(f"{main_path}/data.xlsx", index=False, header=False)
 
             child_folder_1 = f"[{min_limit}_{max_limit}]"
-            child_folder_2 = f"[{str(df.iloc[0]['index'])}_{str(df.iloc[len(df) - 1]['index'])}]_{str(df.iloc[len(df) - 1]['Time']).replace(':', ';')[0:-3] + "_" + str(df.iloc[len(df) - 1]['Date'])}"
+            child_folder_2 = f"[{str(df.iloc[0]['index'])}_{str(df.iloc[len(df) - 1]['index'])}]_{str(df.iloc[len(df) - 1]['Time']).replace(':', ';')[0:-3] + '_' + str(df.iloc[len(df) - 1]['Date'])}"
 
             # if child_folder_2 in previous_plots_list:
             #     return None, None, None, None
@@ -630,9 +626,9 @@ class MyApp(ctk.CTk):
 
             if len(df_sorted) > 0:
                 sorted_now = pd.Timestamp.now().strftime("%Y-%m-%d %H-%M-%S").split(" ")[1] + "_" + folder_name
-                final_path = f"{sorted_path}\\{str(df_sorted['Date'].iloc[0]).split(" ")[0]}_{sorted_now}_{first_min_limit}_{first_max_limit}.xlsx"
+                final_path = f"{sorted_path}\\{str(df_sorted['Date'].iloc[0]).split(' ')[0]}_{sorted_now}_{first_min_limit}_{first_max_limit}.xlsx"
 
-                with pd.ExcelWriter(final_path, engine='xlsxwriter') as writer:
+                with pd.ExcelWriter(final_path, engine='openpyxl') as writer:
                     # Write df_1 to sheet_1
                     df_sorted.to_excel(writer, sheet_name='Sorted', index=False)
 
@@ -687,7 +683,7 @@ class MyApp(ctk.CTk):
         pivot_color = []
         for item in os.listdir(sorted_path):
             if item.endswith('.xlsx') or item.endswith('.xls'):
-                if item.startswith(current_year):
+                if item.startswith('2016'):
                     excel_file_path = os.path.join(sorted_path, item)
                     temp_excel = pd.read_excel(excel_file_path, sheet_name='Violation')
                     if self.filter_date.get() != "":
@@ -823,7 +819,7 @@ class MyApp(ctk.CTk):
                     CellIsRule(operator='greaterThan', formula=['0'], fill=green_fill))
             if 'r.e' in column_name.lower():
                 col_values = [ws_abstract.cell(row=row, column=col_idx).value for row in
-                              range(2, ws_abstract.max_row + 1)]
+                              range(2, rows_number+2)]
                 col_sum = sum([val for val in col_values if isinstance(val, (int, float))])
                 if col_sum < 0:  # Apply conditional formatting if sum is negative
                     # Apply red fill to all cells in this column (rows 2 to the last row)
@@ -831,7 +827,7 @@ class MyApp(ctk.CTk):
                         f"{ws_abstract.cell(2, col_idx).coordinate}:{ws_abstract.cell(colored_last_row, col_idx).coordinate}",
                         CellIsRule(operator='lessThanOrEqual', formula=['10000'], fill=red_fill)
                     )
-                else:
+                elif col_sum > 0:
                     # Apply green fill to all cells in this column (rows 2 to the last row)
                     ws_abstract.conditional_formatting.add(
                         f"{ws_abstract.cell(2, col_idx).coordinate}:{ws_abstract.cell(colored_last_row, col_idx).coordinate}",
@@ -873,7 +869,7 @@ class MyApp(ctk.CTk):
 
 if __name__ == "__main__":
     # ask for password
-    if not MyApp().ask_password():
-        exit()
+    # if not MyApp().ask_password():
+    #     exit()
     app = MyApp()
     app.mainloop()
