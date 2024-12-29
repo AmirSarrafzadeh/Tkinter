@@ -2,7 +2,6 @@ import numpy as np
 import customtkinter as ctk
 from tkinter import filedialog, simpledialog, messagebox
 import os
-import re
 import pystray
 from PIL import Image
 import pandas as pd
@@ -26,7 +25,7 @@ class MyApp(ctk.CTk):
 
         self.file_path1 = None
         self.folder_path = None
-        self.title("Final App")
+        self.title("with rows1")
         self.geometry("540x470")
         self.protocol("WM_DELETE_WINDOW", self.minimize_to_tray)
 
@@ -41,7 +40,7 @@ class MyApp(ctk.CTk):
         self.sidebar_frame = ctk.CTkFrame(self, width=50, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=11, sticky="nsew")
         self.sidebar_frame.grid_rowconfigure(4, weight=1)
-        self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="Setting Pane  20/12/2024", anchor="center",
+        self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="Setting Pane  27/12/2024", anchor="center",
                                        font=ctk.CTkFont(size=15))
         self.logo_label.grid(row=2, column=0, padx=20, pady=(5, 10))
 
@@ -74,13 +73,7 @@ class MyApp(ctk.CTk):
         self.folder_name = ctk.CTkEntry(self, font=('calibri', 12), width=100)
         self.folder_name.grid(row=5, column=2, padx=10, pady=(5, 5), sticky="w", ipadx=20)
 
-        self.custom_limits_var = ctk.BooleanVar()
-        self.custom_limits_var.set(False)
-        self.custom_limits_checkbox = ctk.CTkCheckBox(self, text="Check Pivot Date", font=('calibri', 12),
-                                                      variable=self.custom_limits_var)
-        self.custom_limits_checkbox.grid(row=6, column=1, columnspan=2, padx=10, pady=(5, 5), sticky="w")
-
-        self.integer_label = ctk.CTkLabel(self, text="Enter Rows Number", font=('calibri', 12),
+        self.integer_label = ctk.CTkLabel(self, text="Starting Point", font=('calibri', 12),
                                           justify="center",
                                           wraplength=200)
         self.integer_label.grid(row=7, column=1, padx=10, pady=(5, 5), sticky="w")
@@ -88,17 +81,13 @@ class MyApp(ctk.CTk):
         self.rows_number = ctk.CTkEntry(self, font=('calibri', 12), width=100)
         self.rows_number.grid(row=7, column=2, padx=10, pady=(5, 5), sticky="w", ipadx=20)
 
-        self.label = ctk.CTkLabel(self, text="Select Time", font=("calibri", 12), justify="center",
+        self.label = ctk.CTkLabel(self, text="Start Row", font=("calibri", 12), justify="center",
                                   wraplength=200)
         self.label.grid(row=8, column=1, padx=10, pady=(5, 5), sticky="w")
-        self.time_combobox = ctk.CTkComboBox(self, values=["01:30:00", "02:30:00", "03:30:00", "04:30:00", "05:30:00",
-                                                           "06:30:00", "07:30:00", "08:30:00", "09:30:00", "10:30:00",
-                                                           "11:30:00", "12:30:00", "13:30:00", "14:30:00", "15:30:00",
-                                                           "16:30:00", "17:30:00", "18:30:00", "19:30:00", "20:30:00",
-                                                           "21:30:00", "22:30:00", "23:30:00", "00:30:00"])
-        self.time_combobox.grid(row=8, column=2, padx=10, pady=(5, 5), sticky="w", ipadx=20)
+        self.start_row = ctk.CTkEntry(self, font=('calibri', 12), width=100)
+        self.start_row.grid(row=8, column=2, padx=10, pady=(5, 5), sticky="w", ipadx=20)
 
-        self.label = ctk.CTkLabel(self, text="Select Rows to UP", font=("calibri", 12), justify="center",
+        self.label = ctk.CTkLabel(self, text="End Row", font=("calibri", 12), justify="center",
                                   wraplength=200)
         self.label.grid(row=9, column=1, padx=10, pady=(5, 5), sticky="w")
 
@@ -675,7 +664,6 @@ class MyApp(ctk.CTk):
             messagebox.showerror("Error", "Please select an Excel file and an output folder.")
             return
 
-        check_pivot_date = self.custom_limits_var.get()
         # Set the logging configuration
         logging.basicConfig(filename="file.log",
                             filemode='a',
@@ -686,9 +674,13 @@ class MyApp(ctk.CTk):
         if self.min_limit.get() != "":
             min_limit = self.min_limit.get().split("_")
             min_limit_list = [float(x) for x in min_limit]
+        else:
+            min_limit_list = [0, 0.1, 0.2, 0.3, 0.4]
         if self.max_limit.get() != "":
             max_limit = self.max_limit.get().split("_")
             max_limit_list = [float(x) for x in max_limit]
+        else:
+            max_limit_list = [1, 0.9, 0.8, 0.7, 0.6]
         if self.folder_name.get() != "":
             folder_name = self.folder_name.get()
 
@@ -696,9 +688,8 @@ class MyApp(ctk.CTk):
             folder_name = "plots"
 
         if self.data_rows.get() != "":
-            data_rows = int(self.data_rows.get()) - 2
-        else:
-            data_rows = 48
+            data_rows = int(self.data_rows.get())
+
         try:
             df = pd.read_excel(self.file_path1, header=None)
             main_path = os.path.join(self.folder_path, folder_name) if folder_name else self.folder_path
@@ -713,42 +704,44 @@ class MyApp(ctk.CTk):
             df = df[['index', 'Date', 'Time', 'O', 'H', 'L', 'C']]
             df["Time"] = df["Time"].astype(str).str.strip()
 
-            first_date_original_df = df.iloc[0]['Date'].replace(".", "-")
-            last_date_original_df = df.iloc[-1]['Date'].replace(".", "-")
-            length_original_df = str(len(df))
-
             df['b'] = (df['C'] - df['L']) / (df['H'] - df['L'])
             df['s'] = (df['H'] - df['C']) / (df['H'] - df['L'])
-            selected_time_indexes = df[df["Time"] == self.time_combobox.get()].index
-            selected_time_indexes = selected_time_indexes[selected_time_indexes > data_rows]
         except Exception as e:
             logging.error(f"{inspect.currentframe().f_lineno}  | An error occurred while reading the Excel file: {e}")
             messagebox.showerror("Error", "An error occurred while reading the Excel file.")
             return
 
-        all_dfs = {}
-        df_counter = 0
-        check_sequence_flag = True
         r_e_dict = {}
         positive_negative = {}
         pivot_dict = {}
         after_pivot = {}
-        logging.info(f"Start processing the abs for these {len(selected_time_indexes)} number of table.")
+        logging.info(f"Start processing the abs for these {len(df) - int(self.start_row.get())} number of table.")
         table_counter = 0
-        for index in selected_time_indexes:
+        new_selected_time_indexes = list(range(int(self.start_row.get())-1, data_rows))
+        date_name_value_list = []
+        time_name_value_list = []
+
+        if self.rows_number.get() != "":
+            rows_number = int(self.rows_number.get()) + 1
+        else:
+            rows_number = 0
+
+        for index in new_selected_time_indexes:
             try:
-                sub_df_row = df.loc[index - (data_rows + 1):index]
+                sub_df_row = df.loc[rows_number:index]
                 sub_df_reset = sub_df_row.reset_index(drop=True)
                 sub_df = sub_df_reset.drop("index", axis=1)
                 sub_df['index'] = range(1, len(sub_df) + 1)
                 sub_df = sub_df[['index', 'Date', 'Time', 'O', 'H', 'L', 'C', 'b', 's']]
-                all_dfs[f"df_{str(df_counter)}"] = sub_df
                 last_date_sub_df = sub_df.iloc[-1]['Date'].replace(".", "-")
+                last_time_sub_df = sub_df.iloc[-1]['Time']
+                date_name_value_list.append(last_date_sub_df)
+                time_name_value_list.append(last_time_sub_df)
             except Exception as e:
                 logging.error(f"{inspect.currentframe().f_lineno}  | An error occurred while processing the data: {e}")
                 messagebox.showerror("Error", "An error occurred while processing the data.")
                 return
-            df_counter += 1
+
             df_2_dict = {}
             for i in range(len(min_limit_list)):
                 all_dates = []
@@ -767,9 +760,7 @@ class MyApp(ctk.CTk):
                 start = len(sub_df) + 1
                 end = len(sub_df)
                 try:
-                    if check_sequence_flag:
-                        sequences = self.print_sequences(start, end)
-                        check_sequence_flag = False
+                    sequences = self.print_sequences(start, end)
                 except Exception as e:
                     logging.error(
                         f"{inspect.currentframe().f_lineno}  | An error occurred while generating sequences: {e}")
@@ -860,10 +851,7 @@ class MyApp(ctk.CTk):
                     return
 
             # current_year = str(datetime.now().year)
-            if self.rows_number.get() != "":
-                rows_number = int(self.rows_number.get())
-            else:
-                rows_number = 14
+
 
             abstract_df = pd.DataFrame()
             pivot_date = []
@@ -872,28 +860,14 @@ class MyApp(ctk.CTk):
             pivot_minimum_areas = []
             pivot_color = []
             for temp_excel in df_2_dict.values():
-                if check_pivot_date:
-                    check_just_last_date = temp_excel[temp_excel['Date'] == last_date_sub_df]
-                    minimum_row_temp = min(len(check_just_last_date), rows_number)
-                    pivot_date.extend(check_just_last_date['Date'].tolist()[:minimum_row_temp])
-                    pivot_time.extend(check_just_last_date['Time'].tolist()[:minimum_row_temp])
-                    pivot_total.extend(check_just_last_date.iloc[:, 3].tolist()[:minimum_row_temp])
-                    pivot_minimum_areas.extend(check_just_last_date['Minimum_Area'].tolist()[:minimum_row_temp])
-                    pivot_color.extend(check_just_last_date['Color'].tolist()[:minimum_row_temp])
-                else:
-                    minimum_row_temp = min(len(temp_excel), rows_number)
-                    pivot_date.extend(temp_excel['Date'].tolist()[:minimum_row_temp])
-                    pivot_time.extend(temp_excel['Time'].tolist()[:minimum_row_temp])
-                    pivot_total.extend(temp_excel.iloc[:, 3].tolist()[:minimum_row_temp])
-                    pivot_minimum_areas.extend(temp_excel['Minimum_Area'].tolist()[:minimum_row_temp])
-                    pivot_color.extend(temp_excel['Color'].tolist()[:minimum_row_temp])
-
+                minimum_row_temp = len(temp_excel)
+                pivot_date.extend(temp_excel['Date'].tolist()[:minimum_row_temp])
+                pivot_time.extend(temp_excel['Time'].tolist()[:minimum_row_temp])
+                pivot_total.extend(temp_excel.iloc[:, 3].tolist()[:minimum_row_temp])
+                pivot_minimum_areas.extend(temp_excel['Minimum_Area'].tolist()[:minimum_row_temp])
+                pivot_color.extend(temp_excel['Color'].tolist()[:minimum_row_temp])
                 try:
-                    if len(temp_excel) >= rows_number:
-                        selected_temp_df = temp_excel.head(rows_number).reset_index(drop=True)
-                        abstract_df = pd.concat([abstract_df, selected_temp_df], axis=1)
-                    else:
-                        abstract_df = pd.concat([abstract_df, temp_excel.reset_index(drop=True)], axis=1)
+                    abstract_df = pd.concat([abstract_df, temp_excel.reset_index(drop=True)], axis=1)
                 except Exception as e:
                     logging.error(
                         f"{inspect.currentframe().f_lineno}  | An error occurred while concatenating the data: {e}")
@@ -926,7 +900,7 @@ class MyApp(ctk.CTk):
                 messagebox.showerror("Error", "An error occurred while processing the pivot df.")
                 return
 
-            abs_column_names = ["row_id", "date"]
+            abs_column_names = ["row_id", "row", "date", "time"]
             for i in range(len(min_limit_list)):
                 abs_column_names.append(f"{min_limit_list[i]}--{max_limit_list[i]}")
 
@@ -944,22 +918,10 @@ class MyApp(ctk.CTk):
             for i in range(len(color_df.columns)):
                 if i == len(color_df.columns) - 1:
                     try:
-                        if check_pivot_date:
-                            r_e_list_min_row = len(
-                                date_df_check.iloc[:, i][date_df_check.iloc[:, i] == last_date_sub_df])
-                            if r_e_list_min_row > 0:
-                                if len(color_df) >= r_e_list_min_row:
-                                    temp_color_df_dropna = color_df.iloc[:r_e_list_min_row, i].dropna()
-                                    if len(temp_color_df_dropna) > 0:
-                                        final_positive_value = sum(temp_color_df_dropna >= 0) / len(
-                                            temp_color_df_dropna)
-                                        final_negative_value = 1 - final_positive_value
-
-                        else:
-                            temp_color_df_dropna = color_df.iloc[:, i].dropna()
-                            if len(temp_color_df_dropna) > 0:
-                                final_positive_value = sum(temp_color_df_dropna >= 0) / len(temp_color_df_dropna)
-                                final_negative_value = 1 - final_positive_value
+                        temp_color_df_dropna = color_df.iloc[:, i].dropna()
+                        if len(temp_color_df_dropna) > 0:
+                            final_positive_value = sum(temp_color_df_dropna >= 0) / len(temp_color_df_dropna)
+                            final_negative_value = 1 - final_positive_value
                         if (final_positive_value != False) and (final_negative_value != False):
                             final_positive_value_list.append(final_positive_value)
                             final_negative_value_list.append(final_negative_value)
@@ -970,22 +932,10 @@ class MyApp(ctk.CTk):
                         return
                 else:
                     try:
-                        if check_pivot_date:
-                            r_e_list_min_row = len(
-                                date_df_check.iloc[:, i][date_df_check.iloc[:, i] == last_date_sub_df])
-                            if r_e_list_min_row > 0:
-                                if len(color_df) >= r_e_list_min_row:
-                                    temp_color_df_dropna = color_df.iloc[:r_e_list_min_row, i].dropna()
-                                    if len(temp_color_df_dropna) > 0:
-                                        one_before_final_positive = sum(temp_color_df_dropna >= 0) / len(
-                                            temp_color_df_dropna)
-                                        one_before_final_negative = 1 - one_before_final_positive
-
-                        else:
-                            temp_color_df_dropna = color_df.iloc[:, i].dropna()
-                            if len(temp_color_df_dropna) > 0:
-                                one_before_final_positive = sum(temp_color_df_dropna >= 0) / len(temp_color_df_dropna)
-                                one_before_final_negative = 1 - one_before_final_positive
+                        temp_color_df_dropna = color_df.iloc[:, i].dropna()
+                        if len(temp_color_df_dropna) > 0:
+                            one_before_final_positive = sum(temp_color_df_dropna >= 0) / len(temp_color_df_dropna)
+                            one_before_final_negative = 1 - one_before_final_positive
 
                         if (one_before_final_positive != False) and (one_before_final_negative != False):
                             final_positive_value_list.append(one_before_final_positive)
@@ -1002,14 +952,10 @@ class MyApp(ctk.CTk):
                 if len(re_df.iloc[:, i].dropna()) == 0:
                     r_e_list.append("No Shape")
                 else:
-                    if check_pivot_date:
-                        r_e_list_min_row = len(date_df_check.iloc[:, i][date_df_check.iloc[:, i] == last_date_sub_df])
-                        r_e_list.append(re_df.iloc[:r_e_list_min_row, i].sum())
-                    else:
-                        r_e_list.append(re_df.iloc[:, i].sum())
+                    r_e_list.append(re_df.iloc[:, i].sum())
 
             r_e_list.append(sum(item for item in r_e_list if isinstance(item, (int, float, np.integer))))
-            key_name = abstract_df['Date'].iloc[0][0]
+            key_name = str(index+1)
             r_e_dict[key_name] = r_e_list
             try:
                 if (final_positive_value != False) and (one_before_final_positive != False):
@@ -1103,13 +1049,8 @@ class MyApp(ctk.CTk):
                         temp_after_pivot.append(max_pivot)
                         temp_after_pivot.append(sum(grouped_pivot_df['total']))
                 else:
-                    temp_after_pivot = []
-                    temp_after_pivot.append(
-                        "No Time")
-                    temp_after_pivot.append("No Minimum Area")
-                    temp_after_pivot.append("No Minimum Area")
-                    temp_after_pivot.append(max_pivot)
-                    temp_after_pivot.append(sum(grouped_pivot_df['total']))
+                    temp_after_pivot = ["No Time", "No Minimum Area", "No Minimum Area", max_pivot,
+                                        sum(grouped_pivot_df['total'])]
             except Exception as e:
                 logging.error(
                     f"{inspect.currentframe().f_lineno}  | An error occurred while checking the pivot list counts: {e}")
@@ -1120,12 +1061,7 @@ class MyApp(ctk.CTk):
             pivot_dict[key_name] = result
             table_counter += 1
             logging.info(
-                f"{inspect.currentframe().f_lineno}  | The table {table_counter} is from {index - (data_rows)} - {index+1} done successfully.")
-            logging.info(
-                f"{inspect.currentframe().f_lineno}  | The table start is {df['Date'].iloc[index - (data_rows + 1)]} - {df['Time'].iloc[index - (data_rows + 1)]}.")
-
-            logging.info(
-                f"{inspect.currentframe().f_lineno}  | The table end is {df['Date'].iloc[index]} - {df['Time'].iloc[index]}.")
+                f"{inspect.currentframe().f_lineno}  | The table {table_counter} is from 0 - {index+1} done successfully.")
             logging.info("----------------------------------------------------------------------------------------------------------------------------------------------------")
 
         max_len_piv_list = []
@@ -1168,6 +1104,8 @@ class MyApp(ctk.CTk):
         for i in range(len(r_e_dict)):
             key_name = (list(positive_negative.keys())[i])
             pippo_list = [key_name]
+            pippo_list.extend([date_name_value_list[i]])
+            pippo_list.extend([str(time_name_value_list[i])])
             pippo_list.extend((list(r_e_dict.values())[i]))
             pippo_list.extend((list(final_pivot_dict.values())[i]))
             pippo_list.extend((list(after_pivot.values())[i]))
@@ -1182,12 +1120,12 @@ class MyApp(ctk.CTk):
 
         final_abs_df.columns = abs_column_names
 
-        final_abs_df = final_abs_df[abs_column_names[1:]]
-        final_abs_df['date'] = pd.to_datetime(final_abs_df['date'])
+        sorted_final_abs_df = final_abs_df[abs_column_names[1:]]
+        # sorted_final_abs_df['date'] = pd.to_datetime(final_abs_df['date'])
 
         # # Sort the DataFrame by 'date' column from newest to oldest
-        sorted_final_abs_df = final_abs_df.sort_values(by='date', ascending=False)
-        sorted_final_abs_df['date'] = sorted_final_abs_df['date'].dt.strftime('%Y-%m-%d')
+        # sorted_final_abs_df = final_abs_df.sort_values(by='date', ascending=False)
+        # sorted_final_abs_df['date'] = sorted_final_abs_df['date'].dt.strftime('%Y-%m-%d')
 
         # try:
         #     second_df = pd.read_excel(self.file_path1, header=None)
@@ -1243,15 +1181,15 @@ class MyApp(ctk.CTk):
         # merged_df = pd.merge(sorted_final_abs_df, result_df, on="date", how="outer")
         fillna_value = "."
         # merged_df_cleaned = merged_df.fillna(f"{fillna_value}")
-        merged_df_cleaned = sorted_final_abs_df.fillna(f"{fillna_value}")
+        sorted_merged_df_cleaned = sorted_final_abs_df.fillna(f"{fillna_value}")
 
         # merged_df_cleaned = merged_df.dropna(subset=['positive', 'negative'], how='all')
 
-        merged_df_cleaned['date'] = pd.to_datetime(merged_df_cleaned['date'])
+        # merged_df_cleaned['date'] = pd.to_datetime(merged_df_cleaned['date'])
 
         # Sort the DataFrame by 'date' column from newest to oldest
-        sorted_merged_df_cleaned = merged_df_cleaned.sort_values(by='date', ascending=False)
-        sorted_merged_df_cleaned['date'] = sorted_merged_df_cleaned['date'].dt.strftime('%Y-%m-%d')
+        # sorted_merged_df_cleaned = merged_df_cleaned.sort_values(by='date', ascending=False)
+        # sorted_merged_df_cleaned['date'] = sorted_merged_df_cleaned['date'].dt.strftime('%Y-%m-%d')
 
         sorted_merged_df_cleaned.to_excel(f"{main_path}\\final_abs.xlsx", index=False)
 
@@ -1261,10 +1199,13 @@ class MyApp(ctk.CTk):
         # grouped_pivot_df.to_excel(pivot_file_name, sheet_name='pivot', index=False)
 
         file_path = f"{main_path}\\final_abs.xlsx"
+        from datetime import datetime
+        now = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+
         if len(sorted_final_abs_df) > 0:
-            save_file_path = f"{main_path}\\abs_{first_date_original_df}_{last_date_original_df}_{length_original_df}.xlsx"
+            save_file_path = f"{main_path}\\abs_{int(self.start_row.get())}_{data_rows}_{now}.xlsx"
         else:
-            save_file_path = f"{main_path}\\abs.xlsx"
+            save_file_path = f"{main_path}\\empty_abs.xlsx"
 
         workbook = load_workbook(file_path)
         sheet = workbook.active

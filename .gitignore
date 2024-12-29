@@ -1,3 +1,80 @@
+
+
+.env/
+.tkvenv/
+# Byte-compiled files
+*.py[cod]
+__pycache__/
+*.so
+
+# Tkinter-specific files
+*.pyw
+
+# Logs and database files
+*.log
+*.sqlite3
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.ENV/
+
+# Distribution / Packaging
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+*.egg
+
+# Unit test / Coverage reports
+htmlcov/
+.coverage
+.tox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# IDE / Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Backup files
+*.bak
+*.tmp
+*.~*
+
+# PyInstaller
+# Usually these files are written by a Python script from PyInstaller
+*.manifest
+*.spec
+
+# Cache and temporary files
+*.tmp
+*.log
+*.~*
+*.orig
+*.rej
+
+# Additional OS or editor files
+*~
+
 .idea
 *.mp3
 *.mp4
@@ -9,5 +86,3 @@
 *.docx
 *.doc
 .tkvenv
-
-.env
