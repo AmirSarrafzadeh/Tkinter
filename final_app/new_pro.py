@@ -40,7 +40,7 @@ class MyApp(ctk.CTk):
         self.sidebar_frame = ctk.CTkFrame(self, width=50, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=13, sticky="nsew")
         self.sidebar_frame.grid_rowconfigure(4, weight=1)
-        self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="Setting Pane  21/02/2025", anchor="center",
+        self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="Setting Pane  24/02/2025", anchor="center",
                                        font=ctk.CTkFont(size=15))
         self.logo_label.grid(row=2, column=0, padx=20, pady=(5, 10))
 
@@ -583,7 +583,6 @@ class MyApp(ctk.CTk):
 
             r_e_list.append(sum(item for item in r_e_list if isinstance(item, (int, float, np.integer))))
             key_name = str(index + 1)
-            print(key_name)
             r_e_dict[key_name] = r_e_list
             try:
                 if (final_positive_value != False) and (one_before_final_positive != False):
@@ -872,6 +871,36 @@ class MyApp(ctk.CTk):
             messagebox.showerror("Error", "An error occurred while reading the Excel file.")
             return
 
+        all_files = os.listdir(main_path)
+        excel_files = [file for file in all_files if file.endswith(('.xlsx', '.xls'))]
+
+        all_subscription = []
+
+        for file in excel_files:
+            first_part_name = file.split("_")[0]
+            second_part_name = file.split("_")[1]
+
+            temp = pd.read_excel(os.path.join(main_path, file))
+            temp = temp[temp['positive'] != 0.0]
+            temp = temp[temp['minidef pivote'] != 'No Time']
+            temp['hour_minute'] = first_part_name + ":" + second_part_name
+
+            temp_execl_columns = temp.columns
+            final_columns = []
+            for column in temp_execl_columns:
+                if not column.startswith("pivot") and not column.startswith("row") and not column.startswith(
+                        "minimu def area date"):
+                    final_columns.append(column)
+
+            for i in range(len(temp) - 1):
+                if i == 0:
+                    all_subscription.append(temp[final_columns].iloc[i])
+                else:
+                    if temp['minidef pivote'].iloc[i] != temp['minidef pivote'].iloc[i + 1]:
+                        all_subscription.append(temp[final_columns].iloc[i + 1])
+
+            final_subscription_df = pd.DataFrame(all_subscription)
+            final_subscription_df.to_excel(os.path.join(main_path, "Subscription.xlsx"), index=False)
 
         messagebox.showinfo("Process Completed", "The process has finished successfully!")
 
